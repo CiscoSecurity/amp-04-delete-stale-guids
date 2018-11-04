@@ -1,4 +1,4 @@
-### AMP for Endpoints SHA256 to command line arguments
+### AMP for Endpoints Delete Stale GUIDs
 
 Script will query an AMP for Endpoints environment and collect all GUIDs that have not been seen for 60 days or more. It will write them to disk in a CSV with the Age in days, GUID, and Hostname. The user will be prompted if they would like to delete the stale GUIDs. If they answer y the script will delete stale GUIDs from the environment
 
