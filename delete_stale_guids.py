@@ -97,6 +97,10 @@ def main():
     # Query the API
     response_json = get(amp_session, computers_url)
 
+    # Print the total number of GUIDs found
+    total_guids = response_json['metadata']['results']['total']
+    print('GUIDs found in environment: {}'.format(total_guids))
+
     # Process the returned JSON
     initial_batch = process_response_json(response_json, age_threshold)
 
@@ -107,6 +111,8 @@ def main():
     while 'next' in response_json['metadata']['links']:
         next_url = response_json['metadata']['links']['next']
         response_json = get(amp_session, next_url)
+        index = response_json['metadata']['results']['index']
+        print('Processing index: {}'.format(index))
         next_batch = process_response_json(response_json, age_threshold)
         computers_to_delete = computers_to_delete.union(next_batch)
 
@@ -116,7 +122,7 @@ def main():
 
     if computers_to_delete:
         print('Writing CSV containing stale GUIDs to stale_guids.csv')
-        with open('stale_guids.csv', 'w') as file_output:
+        with open('stale_guids.csv', 'w', encoding='utf-8') as file_output:
             file_output.write('Age in days,GUID,Hostname\n')
             for computer in computers_to_delete:
                 file_output.write('{},{},{}\n'.format(computer.age,
