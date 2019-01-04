@@ -7,7 +7,7 @@ Script will query an AMP for Endpoints environment and collect all GUIDs that ha
 For large environments (50k+ GUIDs) this script may take over 30 minutes to complete.
 
 ### Before using you must update the following:
-The authentictaion parameters are set in the ```api.cfg``` :
+The authentication parameters are set in the ```api.cfg``` :
 - client_id 
 - api_key
 
