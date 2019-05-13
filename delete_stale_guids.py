@@ -5,7 +5,6 @@ import sys
 import requests
 
 UTC_NOW = datetime.utcnow()
-print("bananan")
 
 def calculate_time_delta(timestamp):
     '''Calculate how long it has been since the GUID was last seen
