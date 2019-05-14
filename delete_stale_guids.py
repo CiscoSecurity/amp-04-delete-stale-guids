@@ -53,11 +53,6 @@ def confirm_delete():
         if reply[:1] == 'n':
             return False
 
-
-
-
-
-
 def delete_guid(session, guid, hostname, computers_url, noninteractive):
     '''Delete the supplied GUID
     '''
@@ -79,7 +74,6 @@ def delete_guid(session, guid, hostname, computers_url, noninteractive):
                 file_output.write(daytime_string + ' - Succesfully deleted: {}'.format(hostname) + '\n')
             else:
                 file_output.write(daytime_string + ' - Something went wrong deleting: {}'.format(hostname) + '\n')
-
 
 def get(session, url):
     '''HTTP GET the URL and return the decoded JSON
