@@ -93,7 +93,7 @@ def main():
     '''
 
     # Specify the config file
-    config_file = 'api.env'
+    config_file = 'api.cfg'
 
     # Reading the config file to get settings
     config = configparser.RawConfigParser()
