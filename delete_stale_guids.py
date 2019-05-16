@@ -5,14 +5,8 @@ import sys
 import requests
 
 UTC_NOW = datetime.utcnow()
-if len(sys.argv) > 1:
-    if str(sys.argv[1] == '-n'):
-        noninteractive = True
-    else:
-        print('Usage: python delete_stale_guids.py <-n>')
-        sys.exit()
-else:
-    noninteractive = False
+
+
 
 def calculate_time_delta(timestamp):
     '''Calculate how long it has been since the GUID was last seen
@@ -65,21 +59,11 @@ def delete_guid(session, guid, hostname, computers_url):
     url = computers_url + '{}'.format(guid)
     response = session.delete(url)
     response_json = response.json()
-    if noninteractive:
-        if response.status_code == 200 and response_json['data']['deleted']:
-            print('Succesfully deleted: {}'.format(hostname))
-        else:
-            print('Something went wrong deleting: {}'.format(hostname))
+
+    if response.status_code == 200 and response_json['data']['deleted']:
+        print('Succesfully deleted: {}'.format(hostname))
     else:
-        now = datetime.now()
-        day_string = now.strftime("%Y-%m-%d")
-        daytime_string = now.strftime("%Y-%m-%d %H:%M:%S")
-        # Log file rotate daily
-        with open('log_'+ day_string + '.txt', 'a+', encoding='utf-8') as file_output:
-            if response.status_code == 200 and response_json['data']['deleted']:
-                file_output.write(daytime_string + ' - Succesfully deleted: {}'.format(hostname) + '\n')
-            else:
-                file_output.write(daytime_string + ' - Something went wrong deleting: {}'.format(hostname) + '\n')
+        print('Something went wrong deleting: {}'.format(hostname))
 
 def get(session, url):
     '''HTTP GET the URL and return the decoded JSON
@@ -91,12 +75,9 @@ def get(session, url):
 def main():
     '''The main logic of the script
     '''
-    if noninteractive == '-n':
-        print('jepp: ', noninteractive)
-    else:
-        print('nope')
+
     # Specify the config file
-    config_file = 'api.env'
+    config_file = 'api.cfg'
 
     # Reading the config file to get settings
     config = configparser.RawConfigParser()
@@ -104,7 +85,6 @@ def main():
     client_id = config.get('AMPE', 'client_id')
     api_key = config.get('AMPE', 'api_key')
     age_threshold = int(config.get('AMPE', 'age_threshold'))
-    cloud = config.get('AMPE', 'cloud')
 
     # Instantiate requestions session object
     amp_session = requests.session()
@@ -115,7 +95,6 @@ def main():
 
     # URL to query AMP
     cloud = config.get('AMPE', 'cloud')
-
     if cloud == '':
         computers_url = 'https://api.amp.cisco.com/v1/computers/'
     else:
@@ -126,8 +105,7 @@ def main():
 
     # Print the total number of GUIDs found
     total_guids = response_json['metadata']['results']['total']
-    if noninteractive != '-n':
-        print('GUIDs found in environment: {}'.format(total_guids))
+    print('GUIDs found in environment: {}'.format(total_guids))
 
     # Process the returned JSON
     initial_batch = process_response_json(response_json, age_threshold)
@@ -140,19 +118,16 @@ def main():
         next_url = response_json['metadata']['links']['next']
         response_json = get(amp_session, next_url)
         index = response_json['metadata']['results']['index']
-        if noninteractive != '-n':
-            print('Processing index: {}'.format(index))
+        print('Processing index: {}'.format(index))
         next_batch = process_response_json(response_json, age_threshold)
         computers_to_delete = computers_to_delete.union(next_batch)
 
     # Output the number of GUIDs found
-    if noninteractive != '-n':
-        print('Found {} guids that have not been seen for'
-              ' at least {} days'.format(len(computers_to_delete), age_threshold))
+    print('Found {} guids that have not been seen for'
+          ' at least {} days'.format(len(computers_to_delete), age_threshold))
 
     if computers_to_delete:
-        if noninteractive != '-n':
-            print('Writing CSV containing stale GUIDs to stale_guids.csv')
+        print('Writing CSV containing stale GUIDs to stale_guids.csv')
         with open('stale_guids.csv', 'w', encoding='utf-8') as file_output:
             file_output.write('Age in days,GUID,Hostname\n')
             for computer in computers_to_delete:
@@ -160,15 +135,11 @@ def main():
                                                       computer.guid,
                                                       computer.hostname))
         # Check if the user wants to GUIDs to be deleted
-        if noninteractive != '-n':
-            if confirm_delete():
-                for computer in computers_to_delete:
-                    delete_guid(amp_session, computer.guid, computer.hostname, computers_url)
-            else:
-                sys.exit('Exiting!')
-        else:
+        if confirm_delete():
             for computer in computers_to_delete:
-                    delete_guid(amp_session, computer.guid, computer.hostname, computers_url)
+                delete_guid(amp_session, computer.guid, computer.hostname, computers_url)
+        else:
+            sys.exit('Exiting!')
 
 if __name__ == "__main__":
     main()
