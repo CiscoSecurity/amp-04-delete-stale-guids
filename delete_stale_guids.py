@@ -6,6 +6,8 @@ import requests
 
 UTC_NOW = datetime.utcnow()
 
+
+
 def calculate_time_delta(timestamp):
     '''Calculate how long it has been since the GUID was last seen
     '''
@@ -51,10 +53,10 @@ def confirm_delete():
         if reply[:1] == 'n':
             return False
 
-def delete_guid(session, guid, hostname):
+def delete_guid(session, guid, hostname, computers_url):
     '''Delete the supplied GUID
     '''
-    url = 'https://api.amp.cisco.com/v1/computers/{}'.format(guid)
+    url = computers_url + '{}'.format(guid)
     response = session.delete(url)
     response_json = response.json()
 
@@ -92,7 +94,11 @@ def main():
     computers_to_delete = set()
 
     # URL to query AMP
-    computers_url = 'https://api.amp.cisco.com/v1/computers'
+    cloud = config.get('AMPE', 'cloud')
+    if cloud == '':
+        computers_url = 'https://api.amp.cisco.com/v1/computers/'
+    else:
+        computers_url = 'https://api.' + cloud + '.amp.cisco.com/v1/computers/'
 
     # Query the API
     response_json = get(amp_session, computers_url)
@@ -131,7 +137,7 @@ def main():
         # Check if the user wants to GUIDs to be deleted
         if confirm_delete():
             for computer in computers_to_delete:
-                delete_guid(amp_session, computer.guid, computer.hostname)
+                delete_guid(amp_session, computer.guid, computer.hostname, computers_url)
         else:
             sys.exit('Exiting!')
 
